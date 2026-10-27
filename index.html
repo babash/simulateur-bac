@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur bac 2027</title>
+<meta name="description" content="Simulateur de note au bac général, session 2027 : calcule tes points, ta moyenne, ta mention et ce qu'il te reste à obtenir, avec les coefficients officiels.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAFBFD;
+  --sheet:#FFFFFF;
+  --text:#1A1D24;
+  --muted:#5B6270;
+  --line:#DCE1EA;
+  --ink:#1B3A8C;          /* encre bleue */
+  --ink-soft:#E7ECFA;
+  --ink-mid:#8EA3DB;
+  --red:#C8102E;          /* stylo rouge */
+  --red-soft:#FCE9EC;
+  --green:#1C7C52;
+  --green-soft:#E3F3EA;
+  --fluo:#FFE45C;
+  --seyes:#C9D6F2;
+  --margin:#F2A7B0;
+  --shadow:0 1px 0 rgba(27,58,140,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#12151C; --sheet:#1A1E27; --text:#E8EAF0; --muted:#A3A9B6; --line:#2C3240;
+    --ink:#8FB0FF; --ink-soft:#1F2A47; --ink-mid:#4B64A8;
+    --red:#FF7A8A; --red-soft:#3A1C23; --green:#5FD49A; --green-soft:#17322A;
+    --fluo:#C9A900; --seyes:#25314F; --margin:#5A2E37; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#12151C; --sheet:#1A1E27; --text:#E8EAF0; --muted:#A3A9B6; --line:#2C3240;
+  --ink:#8FB0FF; --ink-soft:#1F2A47; --ink-mid:#4B64A8;
+  --red:#FF7A8A; --red-soft:#3A1C23; --green:#5FD49A; --green-soft:#17322A;
+  --fluo:#C9A900; --seyes:#25314F; --margin:#5A2E37; --shadow:none; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--text);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.5;
+  font-variant-numeric:tabular-nums;
+  padding-bottom:110px;
+}
+a{color:var(--ink)}
+.wrap{max-width:780px;margin:0 auto;padding:0 16px}
+.hand{font-family:Caveat,"Comic Sans MS",cursive;font-weight:700}
+
+/* ---------- En-tête : feuille Seyès ---------- */
+header.top{
+  background-color:var(--sheet);
+  background-image:
+    linear-gradient(90deg, transparent 46px, var(--margin) 46px, var(--margin) 48px, transparent 48px),
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--seyes) 31px 32px);
+  border-bottom:1px solid var(--line);
+  padding:28px 0 22px;
+}
+header.top .wrap{padding-left:64px}
+header.top h1{margin:0;font-size:clamp(1.7rem,5.5vw,2.5rem);line-height:1.15;color:var(--ink);letter-spacing:-.01em}
+header.top p{margin:.5rem 0 0;color:var(--muted);max-width:60ch}
+header.top .stamp{display:inline-block;margin-top:.8rem;color:var(--red);font-size:1.45rem;transform:rotate(-2deg)}
+
+/* ---------- Sections ---------- */
+section.step{margin-top:28px}
+.step-head{display:flex;gap:12px;align-items:baseline}
+.step-num{font-family:Caveat,cursive;font-weight:700;font-size:2rem;color:var(--red);line-height:1;min-width:1.2ch}
+.step-head h2{margin:0;font-size:1.35rem;color:var(--ink)}
+.step-intro{color:var(--muted);margin:.35rem 0 .9rem 0}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:6px 16px 14px;box-shadow:var(--shadow);margin-bottom:14px}
+.card h3{font-size:1.02rem;margin:12px 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 .sub{font-weight:400;color:var(--muted);font-size:.9rem}
+
+/* ---------- Profil ---------- */
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;padding:8px 0}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:.92rem;color:var(--muted)}
+select,input[type=text]{
+  font:inherit;color:var(--text);background:var(--paper);
+  border:1.5px solid var(--line);border-radius:10px;padding:9px 10px;min-height:44px;width:100%;
+}
+select:focus,input:focus,button:focus-visible,summary:focus-visible{outline:3px solid var(--ink-mid);outline-offset:1px}
+.optlist{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 4px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.92rem;background:var(--paper);user-select:none;min-height:40px}
+.chip input{accent-color:var(--ink);width:18px;height:18px;margin:0}
+.chip:has(input:checked){border-color:var(--ink);background:var(--ink-soft);color:var(--ink)}
+.chip small{color:var(--muted)}
+.warn{color:var(--red);font-size:.92rem;margin:6px 0 0}
+
+/* ---------- Lignes de notes ---------- */
+.row{
+  display:grid;grid-template-columns:1fr 84px 130px;grid-template-areas:"lab inp pts";
+  align-items:center;gap:6px 12px;padding:9px 0;border-top:1px dashed var(--line)
+}
+.card > .bubble + .row{border-top:none}
+.row .lab{grid-area:lab;display:flex;align-items:center;gap:6px;min-width:0}
+.row .lab span.name{overflow-wrap:anywhere}
+.row .coef{font-size:.8rem;color:var(--ink);background:var(--ink-soft);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.row > input, .row .sems{grid-area:inp}
+.row input{text-align:center;font-weight:700;font-size:1.05rem;padding:8px 4px}
+.row input.bad{border-color:var(--red);background:var(--red-soft)}
+.row input::placeholder{color:var(--muted);font-weight:400;font-style:italic}
+.row .pts{grid-area:pts;text-align:right;line-height:1.25}
+.pts b{font-size:1.02rem}
+.pts .max{color:var(--muted);font-size:.85rem}
+.pts .delta{display:block;font-size:.8rem}
+.up{color:var(--green)} .down{color:var(--red)} .mut{color:var(--muted)}
+.row .bubble{grid-column:1 / -1}
+.row.sem{grid-template-columns:1fr 150px 120px}
+.sems{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sems label{display:flex;flex-direction:column;align-items:center;font-size:.72rem;color:var(--muted);gap:2px}
+.sems input{padding:6px 2px}
+@media (max-width:480px){
+  .fields{grid-template-columns:1fr}
+  .row{grid-template-columns:84px 1fr;grid-template-areas:"lab lab" "inp pts"}
+  .row.sem{grid-template-columns:160px 1fr}
+  header.top .wrap{padding-left:58px}
+}
+
+/* ---------- Bulles d'info ---------- */
+.info{
+  flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ink);color:var(--ink);background:transparent;
+  font:700 .85rem/1 "Atkinson Hyperlegible",sans-serif;cursor:pointer;display:inline-grid;place-items:center;padding:0
+}
+.info[aria-expanded="true"]{background:var(--ink);color:var(--sheet)}
+.bubble{
+  position:relative;margin:8px 0 4px;background:var(--red-soft);border:1.5px solid var(--red);border-radius:12px;
+  padding:10px 14px 12px;font-size:.95rem;color:var(--text)
+}
+.bubble::before{content:"";position:absolute;top:-8px;left:22px;width:14px;height:14px;background:var(--red-soft);border-left:1.5px solid var(--red);border-top:1.5px solid var(--red);transform:rotate(45deg)}
+.bubble[hidden]{display:none}
+.bubble .hand{color:var(--red);font-size:1.35rem;display:block;line-height:1.1;margin-bottom:4px}
+.bubble p{margin:.35rem 0}
+.calc{font-family:inherit;background:var(--sheet);border-radius:8px;padding:6px 10px;margin:.4rem 0;border-left:3px solid var(--ink);overflow-x:auto}
+.calc div{white-space:nowrap}
+
+/* ---------- Hypothèse ---------- */
+.hypo{display:grid;gap:8px;padding:10px 0}
+.hypo label.sw{display:flex;align-items:center;gap:10px;cursor:pointer}
+.hypo input[type=checkbox]{width:22px;height:22px;accent-color:var(--ink)}
+.hypo input[type=range]{width:100%;accent-color:var(--ink)}
+.hypo .val{font-weight:700;color:var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+button.btn{font:inherit;font-size:.92rem;border:1.5px solid var(--ink);color:var(--ink);background:var(--sheet);border-radius:10px;padding:8px 14px;cursor:pointer;min-height:42px}
+button.btn.danger{border-color:var(--red);color:var(--red)}
+button.btn:hover{background:var(--ink-soft)}
+
+/* ---------- Bilan ---------- */
+.total{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 18px;padding:14px 0 6px}
+.total .big{font-size:clamp(2.6rem,11vw,4rem);font-weight:700;color:var(--ink);line-height:1;letter-spacing:-.02em}
+.total .of{color:var(--muted);font-size:1.1rem}
+.total .avg{font-size:1.5rem;font-weight:700}
+.verdict{display:inline-block;margin:6px 0 4px;padding:2px 10px;font-weight:700;background:linear-gradient(180deg,transparent 35%,var(--fluo) 35%,var(--fluo) 90%,transparent 90%)}
+.annot{color:var(--red);font-size:1.5rem;display:block;transform:rotate(-1.5deg);margin:4px 0}
+
+.gauge{position:relative;height:30px;border-radius:8px;background:var(--paper);border:1.5px solid var(--line);overflow:hidden;margin:20px 0 6px}
+.gauge .seg{position:absolute;top:0;bottom:0}
+.seg.acq{background:var(--ink)}
+.seg.sim{background:var(--ink-mid)}
+.seg.hyp{background:repeating-linear-gradient(135deg,var(--ink-mid) 0 6px,transparent 6px 11px)}
+.ticks{position:relative;height:44px;font-size:.78rem;color:var(--muted)}
+.tick{position:absolute;top:0;transform:translateX(-50%);text-align:center;white-space:nowrap}
+.tick::before{content:"";display:block;width:2px;height:10px;background:var(--red);margin:0 auto 2px}
+.gauge .mark{position:absolute;top:0;bottom:0;width:2px;background:var(--red);opacity:.65}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+
+table.goals{width:100%;border-collapse:collapse;font-size:.93rem;margin-top:8px}
+table.goals th,table.goals td{padding:9px 6px;border-top:1px solid var(--line);text-align:right;vertical-align:top}
+table.goals th:first-child,table.goals td:first-child{text-align:left}
+table.goals thead th{color:var(--muted);font-weight:400;font-size:.82rem;border-top:none}
+table.goals tr.reached td:first-child b{color:var(--green)}
+.ok{color:var(--green);font-weight:700}
+.ko{color:var(--red);font-weight:700}
+@media (max-width:560px){
+  table.goals thead{display:none}
+  table.goals tr{display:grid;grid-template-columns:1fr 1fr;padding:8px 0;border-top:1px solid var(--line)}
+  table.goals td{border:none;padding:3px 0;text-align:left}
+  table.goals td:first-child{grid-column:1 / -1}
+  table.goals td::before{content:attr(data-h);display:block;font-size:.75rem;color:var(--muted)}
+  table.goals td:first-child::before{display:none}
+  table.recap tr{grid-template-columns:repeat(3,1fr)}
+}
+.blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.blocks .b{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.blocks .b b{font-size:1.25rem;color:var(--ink)}
+.blocks .bar{height:8px;border-radius:4px;background:var(--ink-soft);margin-top:6px;overflow:hidden}
+.blocks .bar span{display:block;height:100%;background:var(--ink)}
+@media (max-width:480px){.blocks{grid-template-columns:1fr}}
+.pairs{margin:6px 0;padding:0;list-style:none}
+.pairs li{padding:8px 0;border-top:1px dashed var(--line)}
+.pairs li:first-child{border-top:none}
+
+/* ---------- Barre fixe ---------- */
+.dock{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--sheet);
+  border-top:2px solid var(--ink);box-shadow:0 -4px 18px rgba(0,0,0,.08)
+}
+.dock .wrap{display:flex;align-items:center;gap:10px 18px;padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom));flex-wrap:wrap}
+.dock .p{font-size:1.35rem;font-weight:700;color:var(--ink)}
+.dock .p small{font-size:.85rem;color:var(--muted);font-weight:400}
+.dock .m{font-weight:700}
+.dock .n{color:var(--muted);font-size:.88rem;flex-basis:100%}
+.dock a{margin-left:auto;font-size:.9rem}
+
+footer{color:var(--muted);font-size:.9rem;margin-top:34px;border-top:1px solid var(--line);padding-top:16px}
+footer ul{padding-left:1.1rem}
+details.howto{margin-top:6px}
+details.howto summary{cursor:pointer;color:var(--ink);font-weight:700;padding:6px 0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Combien de points pour mon bac&nbsp;?</h1>
+    <p>Simulateur pour la terminale générale, session 2027 (avec l'épreuve anticipée de maths et le Grand oral coef 8). Saisis tes notes de 1re, imagine celles de terminale, et vois exactement combien de points il te reste à aller chercher.</p>
+    <span class="stamp hand">Le bac se joue en points : 2&nbsp;000 au total, 1&nbsp;000 pour l'avoir.</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 1. Profil -->
+  <section class="step" id="profil">
+    <div class="step-head"><span class="step-num">1</span><h2>Ton parcours</h2></div>
+    <p class="step-intro">Tes spécialités et tes options changent les intitulés et le total de coefficients.</p>
+    <div class="card">
+      <div class="fields">
+        <label>Spécialité gardée en terminale n°1<select id="spe1"></select></label>
+        <label>Spécialité gardée en terminale n°2<select id="spe2"></select></label>
+        <label>Spécialité arrêtée en fin de 1re<select id="speAb"></select></label>
+        <label>Langues vivantes A / B<span style="display:flex;gap:8px"><select id="lva" aria-label="Langue vivante A"></select><select id="lvb" aria-label="Langue vivante B"></select></span></label>
+      </div>
+      <p id="speWarn" class="warn" hidden></p>
+      <h3>Options facultatives <span class="sub">(facultatif)</span>
+        <button class="info" type="button" data-b="optionsGlobal" aria-label="Comment comptent les options ?">?</button></h3>
+      <div class="bubble" id="bb-optionsGlobal" hidden></div>
+      <div class="optlist" id="optlist"></div>
+    </div>
+  </section>
+
+  <!-- 2. Première -->
+  <section class="step" id="premiere">
+    <div class="step-head"><span class="step-num">2</span><h2>Tes notes de 1re (acquises)</h2></div>
+    <p class="step-intro">Ces points sont déjà dans ta poche. Pour le contrôle continu, saisis tes <strong>moyennes de semestre S1 et S2</strong> de chaque matière (bulletins de 1re) : la moyenne annuelle est calculée pour toi. Pour les épreuves anticipées, tes notes de juin 2026.</p>
+    <div id="secP"></div>
+  </section>
+
+  <!-- 3. Terminale -->
+  <section class="step" id="terminale">
+    <div class="step-head"><span class="step-num">3</span><h2>Ta terminale (simulation)</h2></div>
+    <p class="step-intro">Ici tu fais des hypothèses : note visée, moyenne actuelle, note d'un bac blanc… Laisse vide ce que tu ne veux pas encore estimer : le simulateur te dira quelle moyenne il te faut dessus.</p>
+    <div class="card">
+      <div class="hypo">
+        <label class="sw"><input type="checkbox" id="hypoOn"> Remplir les cases vides de terminale avec une même note</label>
+        <div id="hypoBox" hidden>
+          <input type="range" id="hypoVal" min="0" max="20" step="0.5" value="12" aria-label="Note supposée">
+          <div>Note supposée pour les cases vides : <span class="val" id="hypoTxt">12</span>/20 <span class="mut">(hachuré sur la jauge)</span></div>
+        </div>
+        <div class="btns">
+          <button class="btn" type="button" id="copy1">Reprendre mes moyennes de 1re en terminale</button>
+          <button class="info" type="button" data-b="copyHelp" aria-label="À quoi sert ce bouton ?">?</button>
+        </div>
+        <div class="bubble" id="bb-copyHelp" hidden></div>
+      </div>
+    </div>
+    <div id="secT"></div>
+  </section>
+
+  <!-- 4. Bilan -->
+  <section class="step" id="bilan">
+    <div class="step-head"><span class="step-num">4</span><h2>Ton bilan en points</h2></div>
+    <div class="card" id="bilanCard"></div>
+    <div class="card" id="recapCard"></div>
+    <div class="card" id="goalsCard"></div>
+    <div class="card" id="blocksCard"></div>
+    <div class="card" id="rattrapCard"></div>
+  </section>
+
+  <footer>
+    <div class="btns">
+      <button class="btn danger" type="button" id="reset">Effacer toutes mes notes</button>
+    </div>
+    <p>Tes notes sont enregistrées uniquement dans ton navigateur (un cookie <code>simubac2027</code> + une copie locale), pour ne pas avoir à les ressaisir. Rien n'est envoyé à un serveur.</p>
+    <p><strong>Simulation indicative.</strong> Tes notes de contrôle continu peuvent être ajustées par la commission académique d'harmonisation, et seul le jury du bac délivre le diplôme et les mentions.</p>
+    <p>Règles utilisées (bac général, session 2027) et sources officielles :</p>
+    <ul>
+      <li><a href="https://www.education.gouv.fr/reussir-au-lycee/comment-calculer-votre-note-au-baccalaureat-325511" target="_blank" rel="noopener">education.gouv.fr : Comment calculer votre note au baccalauréat</a> (coefficients 2027, options)</li>
+      <li><a href="https://eduscol.education.gouv.fr/5706/les-epreuves-terminales-du-baccalaureat-general" target="_blank" rel="noopener">Éduscol : Les épreuves terminales du baccalauréat général</a></li>
+      <li><a href="https://eduscol.education.gouv.fr/5688/epreuve-anticipee-de-mathematiques-aux-baccalaureats-general-et-technologique" target="_blank" rel="noopener">Éduscol : Épreuve anticipée de mathématiques</a></li>
+      <li><a href="https://www.education.gouv.fr/reussir-au-lycee/tout-savoir-sur-le-baccalaureat-les-reponses-vos-questions-325499" target="_blank" rel="noopener">education.gouv.fr : Tout savoir sur le baccalauréat</a> (rattrapage)</li>
+      <li><a href="https://www.education.gouv.fr/bo/2026/Hebdo13/MENE2607843N" target="_blank" rel="noopener">BO n°13 du 27 mars 2026 : points du jury limités à 50</a></li>
+    </ul>
+  </footer>
+</main>
+
+<div class="dock" role="status" aria-live="polite">
+  <div class="wrap" id="dock"></div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   RÈGLES OFFICIELLES — BAC GÉNÉRAL SESSION 2027
+   Contrôle continu (40 coef) : HG 3+3, LVA 3+3, LVB 3+3, Ens. scientifique 3+3,
+     EMC 1+1, EPS 6 (terminale), spécialité arrêtée en 1re 8.
+   Épreuves (60 coef) : Français écrit 5, Français oral 5, Maths anticipée 2,
+     Philosophie 8, Spécialité 1 : 16, Spécialité 2 : 16, Grand oral 8.
+   Options : +2 coef par année suivie (hors des 100 coef).
+   Seuils : 8 rattrapage, 10 admis, 12 AB, 14 B, 16 TB, 18 félicitations.
+   ===================================================================== */
+
+const SPES = ["Arts","Biologie-écologie","Éducation physique, pratiques et culture sportives","Histoire-géo, géopolitique et sc. politiques (HGGSP)","Humanités, littérature et philosophie (HLP)","Langues, littératures et cultures étrangères (LLCER)","Littérature, langues et cultures de l'Antiquité (LLCA)","Mathématiques","Numérique et sciences informatiques (NSI)","Physique-chimie","Sciences de l'ingénieur","Sciences de la vie et de la Terre (SVT)","Sciences économiques et sociales (SES)"];
+const LANGS = ["Anglais","Allemand","Arabe","Chinois","Espagnol","Italien","Portugais","Russe","Créole","Autre langue"];
+const OPTS = [
+  {id:"latin", n:"Latin (LCA)", d:2},
+  {id:"grec",  n:"Grec (LCA)", d:2},
+  {id:"lvc",   n:"Langue vivante C", d:2},
+  {id:"arts",  n:"Option arts", d:2},
+  {id:"epso",  n:"EPS (option)", d:2},
+  {id:"mexp",  n:"Maths expertes", d:1},
+  {id:"mcomp", n:"Maths complémentaires", d:1},
+  {id:"dgemc", n:"Droit et grands enjeux (DGEMC)", d:1}
+];
+const SEUILS = [
+  {m:8,  k:"rattrapage", t:"Accès au rattrapage"},
+  {m:10, k:"admis", t:"Bac obtenu"},
+  {m:12, k:"ab", t:"Mention assez bien"},
+  {m:14, k:"b",  t:"Mention bien"},
+  {m:16, k:"tb", t:"Mention très bien"},
+  {m:18, k:"fel",t:"Très bien + félicitations du jury"}
+];
+
+/* ---------------- État & sauvegarde ---------------- */
+const COOKIE = "simubac2027";
+const DEFAULT = {v:1, spe1:"", spe2:"", speAb:"", lva:"Anglais", lvb:"Espagnol", options:[], notes:{}, hypoOn:false, hypo:12};
+function migrate(st){
+  // anciennes sauvegardes : une moyenne annuelle unique -> recopiée en S1 et S2
+  for(const k of Object.keys(st.notes)){
+    if(/^(HG|LVA|LVB|ES|EMC)[12]$|^SPEAB$|^O_.+_[12]$/.test(k) && st.notes[k] !== "" && st.notes[k+"_S1"] === undefined && st.notes[k+"_S2"] === undefined){
+      st.notes[k+"_S1"] = st.notes[k]; st.notes[k+"_S2"] = st.notes[k];
+    }
+    if(/^(HG|LVA|LVB|ES|EMC)[12]$|^SPEAB$|^O_.+_[12]$/.test(k)) delete st.notes[k];
+  }
+}
+let S = load();
+
+function load(){
+  let raw = null;
+  try{
+    const m = document.cookie.split("; ").find(c => c.startsWith(COOKIE + "="));
+    if(m) raw = decodeURIComponent(m.slice(COOKIE.length + 1));
+  }catch(e){}
+  if(!raw){ try{ raw = localStorage.getItem(COOKIE); }catch(e){} }
+  try{ if(raw){ const o = JSON.parse(raw); if(o && o.v===1){ const st = Object.assign({}, DEFAULT, o, {notes:o.notes||{}}); migrate(st); return st; } } }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT));
+}
+let saveT = null;
+function save(){
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    const json = JSON.stringify(S);
+    try{
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = COOKIE + "=" + encodeURIComponent(json) + "; max-age=31536000; path=/; SameSite=Lax" + secure;
+    }catch(e){}
+    try{ localStorage.setItem(COOKIE, json); }catch(e){}
+  }, 250);
+}
+
+/* ---------------- Outils ---------------- */
+const $ = s => document.querySelector(s);
+const nf = (x, d=2) => (Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toLocaleString("fr-FR",{maximumFractionDigits:d});
+const pt = x => nf(x,1);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function parseNote(v){
+  if(v === undefined || v === null) return null;
+  const s = String(v).trim().replace(",", ".");
+  if(s === "") return null;
+  if(!/^\d{1,2}(\.\d{0,2})?$/.test(s)) return NaN;
+  const n = parseFloat(s);
+  return (n >= 0 && n <= 20) ? n : NaN;
+}
+const EPS = 1e-9;
+function rawOf(i){
+  if(!i.sem){ const v = parseNote(S.notes[i.key]); return {v: Number.isNaN(v) ? null : v, bad: Number.isNaN(v)}; }
+  const a = parseNote(S.notes[i.key+"_S1"]), b = parseNote(S.notes[i.key+"_S2"]);
+  const ok = [a,b].filter(x => x !== null && !Number.isNaN(x));
+  return {v: ok.length ? ok.reduce((x,y)=>x+y,0)/ok.length : null, bad: Number.isNaN(a) || Number.isNaN(b), s1:a, s2:b, partial: ok.length === 1};
+}
+const isMaths = n => n === "Mathématiques";
+
+/* ---------------- Les épreuves selon le profil ---------------- */
+function buildItems(){
+  const it = [];
+  const spe1 = S.spe1 || "Spécialité 1", spe2 = S.spe2 || "Spécialité 2", ab = S.speAb || "à choisir";
+  const add = o => it.push(o);
+  // 1re : contrôle continu
+  add({key:"HG1", g:"cc1", bloc:"cc", sec:"p", coef:3, label:"Histoire-géographie", about:"Moyenne annuelle de 1re, coef 3. Avec celle de terminale (coef 3 aussi), l'histoire-géo pèse coef 6 au total."});
+  add({key:"LVA1",g:"cc1", bloc:"cc", sec:"p", coef:3, label:"LVA : "+S.lva, about:"Moyenne annuelle de 1re en langue vivante A, coef 3 (+ 3 en terminale = coef 6)."});
+  add({key:"LVB1",g:"cc1", bloc:"cc", sec:"p", coef:3, label:"LVB : "+S.lvb, about:"Moyenne annuelle de 1re en langue vivante B, coef 3 (+ 3 en terminale = coef 6)."});
+  add({key:"ES1", g:"cc1", bloc:"cc", sec:"p", coef:3, label:"Enseignement scientifique", about:"Moyenne annuelle de 1re, coef 3 (+ 3 en terminale = coef 6)."});
+  add({key:"EMC1",g:"cc1", bloc:"cc", sec:"p", coef:1, label:"Enseignement moral et civique", about:"Coef 1 en 1re (+ 1 en terminale). Petit coef : chaque point sur 20 ne vaut qu'1 point au bac."});
+  add({key:"SPEAB",g:"cc1",bloc:"cc", sec:"p", coef:8, label:"Spécialité arrêtée : "+ab, about:"La spécialité que tu as abandonnée en fin de 1re compte coef 8 (la moitié d'une spécialité de terminale). C'est ta moyenne annuelle de 1re qui est retenue."});
+  // 1re : épreuves anticipées
+  add({key:"FRE", g:"ea", bloc:"et", sec:"p", coef:5, label:"Français écrit", rat:"FR", about:"Épreuve anticipée écrite de français (4 h), passée en juin de 1re. Coef 5."});
+  add({key:"FRO", g:"ea", bloc:"et", sec:"p", coef:5, label:"Français oral", rat:"FR", about:"Épreuve anticipée orale de français (20 min). Coef 5."});
+  add({key:"MATA",g:"ea", bloc:"et", sec:"p", coef:2, label:"Maths (épreuve anticipée)", rat:"MATA", about:"Nouveauté du bac 2027 : épreuve écrite anticipée de maths (2 h) passée par tous les élèves de 1re en juin 2026. Coef 2. Ces 2 coefficients ont été pris au Grand oral, qui passe de 10 à 8."});
+  // Options (1re)
+  S.options.forEach(id => { const o = OPTS.find(x=>x.id===id); if(o && o.d===2) add({key:"O_"+id+"_1", g:"opt1", bloc:"opt", sec:"p", coef:2, opt:id, label:o.n+" (1re)", about:"Option suivie en 1re et en terminale : 2 coef pour la moyenne annuelle de 1re, 2 pour celle de terminale."}); });
+  // Terminale : contrôle continu
+  add({key:"HG2", g:"cc2", bloc:"cc", sec:"t", coef:3, label:"Histoire-géographie", about:"Moyenne annuelle de terminale, coef 3."});
+  add({key:"LVA2",g:"cc2", bloc:"cc", sec:"t", coef:3, label:"LVA : "+S.lva, about:"Moyenne annuelle de terminale, coef 3."});
+  add({key:"LVB2",g:"cc2", bloc:"cc", sec:"t", coef:3, label:"LVB : "+S.lvb, about:"Moyenne annuelle de terminale, coef 3."});
+  add({key:"ES2", g:"cc2", bloc:"cc", sec:"t", coef:3, label:"Enseignement scientifique", about:"Moyenne annuelle de terminale, coef 3."});
+  add({key:"EMC2",g:"cc2", bloc:"cc", sec:"t", coef:1, label:"Enseignement moral et civique", about:"Moyenne annuelle de terminale, coef 1."});
+  add({key:"EPS", g:"cc2", bloc:"cc", sec:"t", coef:6, label:"EPS", about:"Coef 6, uniquement en terminale. La note vient de 3 évaluations en cours d'année (CCF)."});
+  // Terminale : épreuves
+  add({key:"SPE1",g:"et", bloc:"et", sec:"t", coef:16, label:spe1, rat:"SPE1", about:"Épreuve écrite de spécialité, coef 16 : le plus gros coefficient du bac. 1 point de plus sur 20 ici = 16 points au bac = +0,16 de moyenne."});
+  add({key:"SPE2",g:"et", bloc:"et", sec:"t", coef:16, label:spe2, rat:"SPE2", about:"Deuxième épreuve écrite de spécialité, coef 16."});
+  add({key:"PHILO",g:"et",bloc:"et", sec:"t", coef:8, label:"Philosophie", rat:"PHILO", about:"Épreuve écrite de 4 h, coef 8, passée par tous les élèves de terminale générale."});
+  add({key:"GO",  g:"et", bloc:"et", sec:"t", coef:8, label:"Grand oral", about:"Oral de 20 min sur tes spécialités et ton projet. Coef 8 à partir de la session 2027 (il était à 10 avant l'arrivée des maths anticipées)."});
+  // Options (terminale)
+  S.options.forEach(id => { const o = OPTS.find(x=>x.id===id); if(o) add({key:"O_"+id+"_2", g:"opt2", bloc:"opt", sec:"t", coef:2, opt:id, label:o.n+(o.d===2?" (terminale)":""), about: o.d===2 ? "Moyenne annuelle de terminale de ton option, coef 2." : "Option suivie seulement en terminale : elle compte coef 2, qui s'ajoutent aux 100 coefficients du bac."}); });
+  it.forEach(i => { i.sem = (i.bloc === "cc" && i.key !== "EPS") || i.bloc === "opt"; });
+  return it;
+}
+const GROUPS = {
+  cc1:{sec:"p", t:"Contrôle continu de 1re", sub:"semestres S1 et S2"},
+  ea: {sec:"p", t:"Épreuves anticipées", sub:"juin 2026"},
+  opt1:{sec:"p", t:"Options", sub:"moyennes de 1re"},
+  cc2:{sec:"t", t:"Contrôle continu de terminale", sub:"semestres S1 et S2"},
+  et: {sec:"t", t:"Épreuves finales", sub:"juin 2027"},
+  opt2:{sec:"t", t:"Options", sub:"moyennes de terminale"}
+};
+
+/* ---------------- Calcul ---------------- */
+function compute(){
+  const items = buildItems();
+  const r = {items, C:0, acq:0, acqC:0, sim:0, simC:0, hyp:0, hypC:0, missC:0, missP:0, bloc:{cc:{p:0,c:0,f:0}, et:{p:0,c:0,f:0}, opt:{p:0,c:0,f:0}}, eff:{}};
+  for(const i of items){
+    r.C += i.coef;
+    r.bloc[i.bloc].c += i.coef;
+    const rw = rawOf(i); let v = rw.v; i.raw = rw;
+    let kind = null;
+    if(v !== null){ kind = i.sec === "p" ? "acq" : "sim"; }
+    else if(i.sec === "t" && S.hypoOn){ v = S.hypo; kind = "hyp"; }
+    i.v = v; i.kind = kind;
+    r.eff[i.key] = v;
+    if(kind === "acq"){ r.acq += v*i.coef; r.acqC += i.coef; }
+    else if(kind === "sim"){ r.sim += v*i.coef; r.simC += i.coef; }
+    else if(kind === "hyp"){ r.hyp += v*i.coef; r.hypC += i.coef; }
+    else { r.missC += i.coef; if(i.sec==="p") r.missP += i.coef; }
+    if(v !== null){ r.bloc[i.bloc].p += v*i.coef; r.bloc[i.bloc].f += i.coef; }
+  }
+  r.max = 20*r.C;
+  r.total = r.acq + r.sim + r.hyp;
+  r.filledC = r.C - r.missC;
+  r.complete = r.missC === 0;
+  r.avg = r.complete ? r.total / r.C : (r.filledC ? r.total / r.filledC : null);
+  r.optC = r.bloc.opt.c;
+  r.remainC = r.C - r.acqC; // tout ce qui n'est pas acquis en 1re
+  return r;
+}
+function mentionOf(m){
+  if(m === null) return null;
+  if(m >= 18-EPS) return "Très bien avec félicitations du jury";
+  if(m >= 16-EPS) return "Très bien";
+  if(m >= 14-EPS) return "Bien";
+  if(m >= 12-EPS) return "Assez bien";
+  if(m >= 10-EPS) return "Admis sans mention";
+  if(m >= 8-EPS)  return "Rattrapage (oral de contrôle)";
+  return "Non admis";
+}
+function nextSeuil(m){ return SEUILS.find(s => s.m > m + EPS) || null; }
+
+/* ---------------- Rendu du profil ---------------- */
+function fillSelect(sel, list, val, empty){
+  sel.innerHTML = (empty ? `<option value="">${empty}</option>` : "") + list.map(x => `<option${x===val?" selected":""}>${esc(x)}</option>`).join("");
+}
+function renderProfile(){
+  fillSelect($("#spe1"), SPES, S.spe1, "Choisir…");
+  fillSelect($("#spe2"), SPES, S.spe2, "Choisir…");
+  fillSelect($("#speAb"), SPES, S.speAb, "Choisir…");
+  fillSelect($("#lva"), LANGS, S.lva);
+  fillSelect($("#lvb"), LANGS, S.lvb);
+  $("#optlist").innerHTML = OPTS.map(o => `<label class="chip"><input type="checkbox" value="${o.id}"${S.options.includes(o.id)?" checked":""}> ${esc(o.n)} <small>${o.d===2?"1re + tle, coef 4":"tle, coef 2"}</small></label>`).join("");
+  const w = [];
+  const ch = [S.spe1,S.spe2,S.speAb].filter(Boolean);
+  if(new Set(ch).size !== ch.length) w.push("Tu as choisi deux fois la même spécialité : tu en suis 3 différentes en 1re, et tu en gardes 2 en terminale.");
+  if(S.lva === S.lvb) w.push("Ta LVA et ta LVB sont identiques.");
+  $("#speWarn").hidden = !w.length; $("#speWarn").textContent = w.join(" ");
+}
+
+/* ---------------- Rendu des notes ---------------- */
+function renderNotes(){
+  const items = buildItems();
+  for(const sec of ["p","t"]){
+    let html = "";
+    for(const [gk, g] of Object.entries(GROUPS)){
+      if(g.sec !== sec) continue;
+      const list = items.filter(i => i.g === gk);
+      if(!list.length) continue;
+      const gc = list.reduce((a,i)=>a+i.coef,0);
+      html += `<div class="card"><h3>${g.t} <span class="sub">${g.sub} · ${gc} coef · ${gc*20} pts max</span>
+        <button class="info" type="button" data-b="grp_${gk}" aria-label="Explication : ${esc(g.t)}">?</button></h3>
+        <div class="bubble" id="bb-grp_${gk}" hidden></div>`;
+      for(const i of list){
+        const field = i.sem
+          ? `<div class="sems">${["S1","S2"].map(sm => `<label>${sm}<input type="text" inputmode="decimal" autocomplete="off" maxlength="5" data-k="${i.key}_${sm}" aria-label="${esc(i.label)} : moyenne du semestre ${sm.slice(1)} sur 20" value="${esc(S.notes[i.key+"_"+sm] ?? "")}"></label>`).join("")}</div>`
+          : `<input type="text" inputmode="decimal" autocomplete="off" maxlength="5" data-k="${i.key}" aria-label="Note de ${esc(i.label)} sur 20" value="${esc(S.notes[i.key] ?? "")}">`;
+        html += `<div class="row${i.sem?" sem":""}" data-k="${i.key}">
+          <div class="lab"><span class="name">${esc(i.label)}</span> <span class="coef">coef ${i.coef}</span>
+            <button class="info" type="button" data-b="it_${i.key}" aria-label="Détail du calcul : ${esc(i.label)}">?</button></div>
+          ${field}
+          <div class="pts" id="pts-${i.key}"></div>
+          <div class="bubble" id="bb-it_${i.key}" hidden></div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    $(sec === "p" ? "#secP" : "#secT").innerHTML = html;
+  }
+}
+
+/* ---------------- Contenu des bulles ---------------- */
+const B = {};
+B.optionsGlobal = r => `<span class="hand">Les options, bonus ou malus ?</span>
+  <p>Sans option, le bac compte <b>100 coefficients</b>, donc <b>2&nbsp;000 points</b> (100 × 20). Une option suivie en 1re et en terminale ajoute 4 coefficients (2 par an), une option de terminale seule (maths expertes, maths complémentaires, DGEMC) en ajoute 2.</p>
+  <p>Ces coefficients <b>s'ajoutent</b> au total : avec une option sur 2 ans, tu passes à 104 coef, soit 2&nbsp;080 points, et il te faut 1&nbsp;040 points pour avoir 10/20. Une option fait donc monter ta moyenne seulement si tu y as une note <b>supérieure à ta moyenne générale</b>.</p>
+  <p>Ton total actuel : <b>${r.C} coefficients</b>, soit ${nf(r.max,0)} points.</p>`;
+B.copyHelp = () => `<span class="hand">Une hypothèse prudente</span>
+  <p>Ce bouton recopie tes notes de S1 et S2 de 1re (histoire-géo, langues, enseignement scientifique, EMC, options) dans les cases <b>vides</b> de terminale. C'est un bon point de départ : en général, on garde à peu près le même niveau d'une année sur l'autre. Tu peux ensuite modifier chaque note.</p>`;
+
+function itemBubble(i, r){
+  let h = `<span class="hand">${esc(i.label)}</span><p>${esc(i.about)}</p>`;
+  const max = i.coef*20;
+  if(i.v === null){
+    h += `<p>Pas encore de note. Cette ligne met en jeu <b>${max} points</b> (20 × ${i.coef}). À 10/20, tu en obtiendrais ${i.coef*10}.</p>`;
+  } else {
+    const p = i.v*i.coef, d = (i.v-10)*i.coef;
+    if(i.sem && i.kind !== "hyp"){
+      const s1 = i.raw.s1, s2 = i.raw.s2;
+      h += i.raw.partial
+        ? `<p>Un seul semestre saisi (${s1!==null?"S1":"S2"} : ${nf(s1!==null?s1:s2)}/20) : il sert d'estimation de ta moyenne annuelle en attendant l'autre semestre.</p>`
+        : `<div class="calc"><div>Moyenne annuelle = (S1 + S2) ÷ 2 = (${nf(s1)} + ${nf(s2)}) ÷ 2 = <b>${nf(i.v)}</b></div></div>`;
+    }
+    h += `<div class="calc"><div>${nf(i.v)} × ${i.coef} = <b>${pt(p)} points</b> sur ${max} possibles</div>
+      <div>Points restants non obtenus : ${max} − ${pt(p)} = ${pt(max-p)}</div>
+      <div>Par rapport à 10/20 (${i.coef*10} pts) : <b class="${d>=0?"up":"down"}">${d>=0?"+":"−"}${pt(Math.abs(d))} pts</b> ${d>=0?"d'avance":"de retard"}</div></div>`;
+    if(i.kind === "hyp") h += `<p class="mut">Cette note est l'hypothèse générale (${nf(S.hypo)}/20) car la case est vide.</p>`;
+    h += `<p>Chaque point gagné sur 20 ici rapporte <b>${i.coef} point${i.coef>1?"s":""}</b> au bac, soit +${nf(i.coef/r.C,3)} sur ta moyenne finale.</p>`;
+    if(i.opt && r.complete){
+      const withOut = (r.total - i.v*i.coef) / (r.C - i.coef);
+      const now = r.total / r.C;
+      h += `<p>Effet de cette note sur ta moyenne : sans elle ${nf(withOut)}/20, avec elle ${nf(now)}/20 (${now>=withOut?"+":"−"}${nf(Math.abs(now-withOut),3)}).</p>`;
+    }
+  }
+  if(i.sem) h += `<p class="mut">Pour le bac, c'est la moyenne annuelle arrêtée par le conseil de classe qui compte. Le simulateur la calcule comme la moyenne de tes deux semestres, ce qui est le cas le plus courant.</p>`;
+  if(i.rat) h += `<p class="mut">Cette épreuve peut être choisie à l'oral de rattrapage si ta moyenne est entre 8 et 10.</p>`;
+  return h;
+}
+function groupBubble(gk, r){
+  const list = r.items.filter(i => i.g === gk);
+  const gc = list.reduce((a,i)=>a+i.coef,0);
+  const filled = list.filter(i => i.v !== null);
+  const sum = filled.reduce((a,i)=>a+i.v*i.coef,0);
+  const fc = filled.reduce((a,i)=>a+i.coef,0);
+  const intro = {
+    cc1:"Le contrôle continu représente 40 % du bac. En 1re, ce sont tes moyennes annuelles (fixées au dernier conseil de classe) qui comptent, plus la spécialité que tu as arrêtée.",
+    ea:"Les épreuves anticipées se passent en fin de 1re. Elles font partie des 60 % d'épreuves finales. Depuis la session 2027, les maths anticipées s'ajoutent au français écrit et oral.",
+    opt1:"Les options s'ajoutent aux 100 coefficients du bac : elles ne comptent pas dans les 40 % / 60 %.",
+    cc2:"Suite du contrôle continu : moyennes annuelles de terminale, plus l'EPS (coef 6, évaluée uniquement en terminale).",
+    et:"Le gros morceau : 48 coefficients, soit 960 points sur 2 000. Les deux spécialités pèsent à elles seules 640 points.",
+    opt2:"Moyennes de terminale de tes options, coef 2 chacune."
+  }[gk];
+  let h = `<span class="hand">${GROUPS[gk].t}</span><p>${intro}</p>`;
+  if(filled.length){
+    h += `<div class="calc">` + filled.map(i => `<div>${esc(i.label)} : ${nf(i.v)} × ${i.coef} = ${pt(i.v*i.coef)}</div>`).join("") +
+      `<div><b>Total : ${pt(sum)} pts</b> sur ${fc*20} (${fc} coef saisis)${fc?` → moyenne ${nf(sum/fc)}/20`:""}</div></div>`;
+  }
+  if(fc < gc) h += `<p>Il reste <b>${gc-fc} coef</b> non renseignés dans ce bloc, soit ${(gc-fc)*20} points encore en jeu.</p>`;
+  return h;
+}
+const OPEN = new Set();
+function refreshBubbles(r){
+  OPEN.forEach(k => {
+    const btn = document.querySelector(`.info[data-b="${k}"]`), el = document.getElementById("bb-"+k);
+    if(btn && el){ btn.setAttribute("aria-expanded","true"); btn.setAttribute("aria-controls","bb-"+k); el.hidden = false; }
+  });
+  document.querySelectorAll(".info[aria-expanded='true']").forEach(btn => fillBubble(btn.dataset.b, r));
+}
+function fillBubble(key, r){
+  const el = document.getElementById("bb-"+key); if(!el) return;
+  let html = "";
+  if(key.startsWith("it_")){ const i = r.items.find(x => x.key === key.slice(3)); if(i) html = itemBubble(i, r); }
+  else if(key.startsWith("grp_")) html = groupBubble(key.slice(4), r);
+  else if(B[key]) html = B[key](r);
+  el.innerHTML = html;
+}
+
+/* ---------------- Mise à jour ---------------- */
+let R = null;
+function update(){
+  R = compute();
+  const r = R;
+  // lignes
+  for(const i of r.items){
+    const el = document.getElementById("pts-"+i.key); if(!el) continue;
+    const keys = i.sem ? [i.key+"_S1", i.key+"_S2"] : [i.key];
+    for(const k of keys){
+      const inp = document.querySelector(`input[data-k="${k}"]`); if(!inp) continue;
+      inp.classList.toggle("bad", Number.isNaN(parseNote(S.notes[k])));
+      inp.placeholder = (i.kind === "hyp") ? nf(S.hypo) : "/20";
+    }
+    if(i.raw.bad){ el.innerHTML = `<span class="down">Note entre 0 et 20</span>`; continue; }
+    if(i.v === null){ el.innerHTML = `<b class="mut">—</b> <span class="max">/ ${i.coef*20} pts</span><span class="delta mut">${i.coef*20} pts en jeu</span>`; continue; }
+    const p = i.v*i.coef, d = (i.v-10)*i.coef;
+    el.innerHTML = `<b>${pt(p)}</b> <span class="max">/ ${i.coef*20} pts</span><span class="delta ${d>=0?"up":"down"}">${d>=0?"+":"−"}${pt(Math.abs(d))} vs 10/20${i.kind==="hyp"?" (hyp.)":""}</span>${i.sem && i.kind!=="hyp" ? `<span class="delta mut">moy. annuelle ${nf(i.v)}${i.raw.partial?" (1 sem.)":""}</span>`:""}`;
+  }
+  renderBilan(r);
+  renderRecap(r);
+  renderGoals(r);
+  renderBlocks(r);
+  renderRattrapage(r);
+  renderDock(r);
+  refreshBubbles(r);
+}
+
+function renderBilan(r){
+  const el = $("#bilanCard");
+  const ns = r.avg !== null ? nextSeuil(r.avg) : null;
+  let verdict = "", annot = "";
+  if(r.complete){
+    verdict = mentionOf(r.avg);
+    if(ns){ const need = ns.m*r.C - r.total; annot = `encore ${pt(need)} pts pour : ${ns.t.toLowerCase()}`; }
+    else annot = "le maximum des mentions est atteint";
+  }
+  const w = x => (100*x/r.max).toFixed(3)+"%";
+  let left = 0; const segs = [];
+  for(const [k,v] of [["acq",r.acq],["sim",r.sim],["hyp",r.hyp]]){ if(v>0){ segs.push(`<div class="seg ${k}" style="left:${w(left)};width:${w(v)}"></div>`); left += v; } }
+  const marks = SEUILS.map(s => `<div class="mark" style="left:${s.m*5}%"></div>`).join("");
+  const ticks = SEUILS.map(s => `<div class="tick" style="left:${s.m*5}%">${s.m}<br>${nf(s.m*r.C,0)}</div>`).join("");
+  el.innerHTML = `
+    <h3>Tes points au bac <button class="info" type="button" data-b="formula" aria-label="Comment est calculée la note finale ?">?</button></h3>
+    <div class="bubble" id="bb-formula" hidden></div>
+    <div class="total">
+      <div><span class="big">${nf(r.total,1)}</span> <span class="of">/ ${nf(r.max,0)} points</span></div>
+      ${r.complete ? `<div class="avg">${nf(r.avg)} / 20</div>` : ""}
+    </div>
+    ${r.complete ? `<span class="verdict">${verdict}</span><span class="annot hand">${annot}</span>`
+      : `<p>Il te reste <b>${r.missC} coefficients</b> sans note, soit <b>${nf(r.missC*20,0)} points encore en jeu</b>. ${r.avg!==null?`Sur ce que tu as saisi, ta moyenne est de <b>${nf(r.avg)}/20</b>.`:""} Complète les cases ou active l'hypothèse en étape 3 pour voir ta note finale.</p>`}
+    <div class="gauge" aria-hidden="true">${segs.join("")}${marks}</div>
+    <div class="ticks" aria-hidden="true">${ticks}</div>
+    <div class="legend">
+      <span><i style="background:var(--ink)"></i>Acquis en 1re : ${pt(r.acq)} pts</span>
+      <span><i style="background:var(--ink-mid)"></i>Simulé en terminale : ${pt(r.sim)} pts</span>
+      ${r.hyp>0?`<span><i style="background:repeating-linear-gradient(135deg,var(--ink-mid) 0 4px,transparent 4px 7px)"></i>Hypothèse : ${pt(r.hyp)} pts</span>`:""}
+      <span><i style="border:1.5px solid var(--line)"></i>Non renseigné : ${nf(r.missC*20,0)} pts</span>
+    </div>`;
+}
+B.formula = r => `<span class="hand">Le calcul de ta note finale</span>
+  <p>Chaque note est multipliée par son coefficient : on obtient des <b>points</b>. On additionne tous les points, puis on divise par le total des coefficients.</p>
+  <div class="calc"><div>Note finale = Σ (note × coef) ÷ Σ coef</div>
+  <div>= ${pt(R.total)} ÷ ${R.C}${R.complete?` = <b>${nf(R.avg)}/20</b>`:" (incomplet)"}</div></div>
+  <p>Avec ${R.C} coefficients, le maximum est ${R.C} × 20 = <b>${nf(R.max,0)} points</b>. Pour avoir le bac (10/20), il faut ${R.C} × 10 = <b>${nf(R.C*10,0)} points</b>. Chaque seuil de mention se calcule pareil : 12 × ${R.C} = ${nf(12*R.C,0)} pour assez bien, etc.</p>
+  <p>Répartition sans option : 40 coef de contrôle continu (40 %) et 60 coef d'épreuves finales (60 %).${R.optC?` Tes options ajoutent ${R.optC} coef.`:""}</p>`;
+
+function recapSubjects(r){
+  const by = {}; r.items.forEach(i => by[i.key] = i);
+  const S1 = S.spe1 || "Spécialité 1", S2 = S.spe2 || "Spécialité 2";
+  const L = [
+    {n:"Histoire-géographie", k:["HG1","HG2"]},
+    {n:"LVA : "+S.lva, k:["LVA1","LVA2"]},
+    {n:"LVB : "+S.lvb, k:["LVB1","LVB2"]},
+    {n:"Enseignement scientifique", k:["ES1","ES2"]},
+    {n:"Enseignement moral et civique", k:["EMC1","EMC2"]},
+    {n:"EPS", k:["EPS"]},
+    {n:"Spécialité arrêtée : "+(S.speAb||"à choisir"), k:["SPEAB"]},
+    {n:"Français (écrit + oral)", k:["FRE","FRO"]},
+    {n:"Maths anticipées", k:["MATA"]},
+    {n:"Philosophie", k:["PHILO"]},
+    {n:S1, k:["SPE1"], go:true, spe:true},
+    {n:S2, k:["SPE2"], go:true, spe:true}
+  ];
+  S.options.forEach(id => { const o = OPTS.find(x=>x.id===id); if(o) L.push({n:"Option : "+o.n, k:["O_"+id+"_1","O_"+id+"_2"].filter(k => by[k])}); });
+  return L.map(sj => {
+    const parts = sj.k.map(k => by[k]).filter(Boolean).map(i => ({label:i.label, v:i.v, c:i.coef, kind:i.kind, sec:i.sec}));
+    if(sj.go){ const g = by.GO; parts.push({label:"½ Grand oral", v:g.v, c:g.coef/2, kind:g.kind, sec:"t", go:true}); }
+    const c = parts.reduce((a,x)=>a+x.c,0), max = 20*c;
+    const filled = parts.filter(x => x.v !== null);
+    const p = filled.reduce((a,x)=>a+x.v*x.c,0), fc = filled.reduce((a,x)=>a+x.c,0);
+    const yr = sec => { const q = parts.filter(x => x.sec===sec && !x.go && x.v!==null); return q.length ? q.reduce((a,x)=>a+x.v*x.c,0)/q.reduce((a,x)=>a+x.c,0) : null; };
+    return {...sj, parts, c, max, p, fc, rest: max - p, m1: yr("p"), m2: yr("t"), hyp: parts.some(x => x.kind==="hyp"), cyc: fc ? p/fc : null};
+  });
+}
+function renderRecap(r){
+  const L = recapSubjects(r);
+  const f = x => x === null ? `<span class="mut">—</span>` : nf(x);
+  const rows = L.map(sj => {
+    const g = sj.go ? sj.parts.find(x=>x.go) : null, e = sj.go ? sj.parts[0] : null;
+    const tle = sj.go ? `épreuve ${f(e.v)}<br><span class="mut">GO ${f(g.v)}</span>` : f(sj.m2);
+    return `<tr>
+      <td><b>${esc(sj.n)}</b>${sj.go?`<br><span class="mut">épreuve coef 16 + ½ Grand oral coef 4</span>`:""}</td>
+      <td data-h="Moy. 1re">${sj.go ? `<span class="mut">—</span>` : f(sj.m1)}</td>
+      <td data-h="Moy. terminale">${tle}</td>
+      <td data-h="Moy. sur le cycle">${f(sj.cyc)}</td>
+      <td data-h="Coef">${nf(sj.c)}</td>
+      <td data-h="Points obtenus">${pt(sj.p)}<span class="mut"> / ${nf(sj.max,0)}</span>${sj.hyp?" *":""}</td>
+      <td data-h="Restant à gagner"><b class="${sj.rest>EPS?"down":"up"}">${pt(sj.rest)}</b></td></tr>`;
+  }).join("");
+  const tot = L.reduce((a,x)=>({p:a.p+x.p, max:a.max+x.max}),{p:0,max:0});
+  $("#recapCard").innerHTML = `
+    <h3>Par matière : moyennes et points restant à gagner <button class="info" type="button" data-b="recap" aria-label="Comment lire le récapitulatif par matière ?">?</button></h3>
+    <div class="bubble" id="bb-recap" hidden></div>
+    <table class="goals recap">
+      <thead><tr><th>Matière</th><th>Moy. 1re</th><th>Moy. terminale</th><th>Moy. sur le cycle</th><th>Coef</th><th>Points obtenus</th><th>Restant à gagner</th></tr></thead>
+      <tbody>${rows}
+      <tr><td><b>Total</b></td><td data-h=""></td><td data-h=""></td><td data-h=""></td><td data-h="Coef">${r.C}</td><td data-h="Points obtenus"><b>${pt(tot.p)}</b><span class="mut"> / ${nf(tot.max,0)}</span></td><td data-h="Restant à gagner"><b>${pt(tot.max - tot.p)}</b></td></tr>
+      </tbody>
+    </table>
+    ${L.some(x=>x.hyp)?`<p class="mut" style="font-size:.85rem">* comprend des notes d'hypothèse (cases vides de terminale).</p>`:""}`;
+}
+B.recap = r => `<span class="hand">Lire le récapitulatif</span>
+  <p><b>Moy. 1re / Moy. terminale</b> : ta moyenne annuelle dans la matière, calculée à partir de tes deux semestres ((S1 + S2) ÷ 2). Elle est donnée pour information : c'est elle qui est multipliée par le coefficient.</p>
+  <p><b>Moy. sur le cycle</b> : la moyenne de la matière sur la 1re et la terminale réunies, pondérée par les coefficients.</p>
+  <p><b>Restant à gagner</b> = points maximum − points obtenus. Une case vide compte entièrement dans le restant à gagner (20 × coef).</p>
+  <div class="calc"><div>Exemple : histoire-géo, coef 6 au total (3 + 3), maximum 6 × 20 = 120 points.</div><div>Avec 13 en 1re et 12 en terminale : 13 × 3 + 12 × 3 = 75 points, reste 120 − 75 = 45 points.</div></div>
+  <p><b>Grand oral partagé</b> : le Grand oral (coef 8) porte sur tes deux spécialités. Ici, on en rattache la moitié (coef 4) à chaque spécialité, qui pèse donc 16 + 4 = 20 coef, soit 400 points. C'est une présentation pour t'aider à voir le poids réel de chaque spé : le total du bac ne change pas.</p>`;
+
+function renderGoals(r){
+  const base = r.acq;                  // points vraiment acquis (1re)
+  const proj = r.total;
+  const rows = SEUILS.map(s => {
+    const need = s.m*r.C;
+    const rest = need - base;
+    const avgNeed = r.remainC ? rest / r.remainC : 0;
+    let avgTxt;
+    if(rest <= EPS) avgTxt = `<span class="ok">déjà assuré</span>`;
+    else if(avgNeed > 20 + EPS) avgTxt = `<span class="ko">impossible (${nf(avgNeed)})</span>`;
+    else avgTxt = `<b>${nf(avgNeed)}</b>/20`;
+    let simTxt;
+    if(!r.complete) simTxt = `<span class="mut">à compléter</span>`;
+    else { const m = proj - need; simTxt = m >= -EPS ? `<span class="ok">✓ +${pt(m)}</span>` : `<span class="ko">−${pt(-m)} pts</span>`; }
+    return `<tr class="${r.complete && proj>=need-EPS ? "reached":""}">
+      <td><b>${s.t}</b><br><span class="mut">${s.m}/20</span></td>
+      <td data-h="Points nécessaires">${nf(need,0)}</td>
+      <td data-h="Reste à obtenir">${rest<=EPS?"0":pt(rest)}<span class="mut"> / ${nf(r.remainC*20,0)}</span></td>
+      <td data-h="Moyenne nécessaire">${avgTxt}</td>
+      <td data-h="Ta simulation">${simTxt}</td></tr>`;
+  }).join("");
+  $("#goalsCard").innerHTML = `
+    <h3>Ce qu'il te reste à obtenir <button class="info" type="button" data-b="goals" aria-label="Comment lire ce tableau ?">?</button></h3>
+    <div class="bubble" id="bb-goals" hidden></div>
+    <p class="mut" style="margin:.2rem 0">Points déjà acquis en 1re : <b>${pt(base)}</b>. Points encore en jeu : <b>${nf(r.remainC*20,0)}</b> (${r.remainC} coef).</p>
+    <table class="goals">
+      <thead><tr><th>Objectif</th><th>Points nécessaires</th><th>Reste à obtenir / en jeu</th><th>Moyenne nécessaire sur le reste</th><th>Ta simulation</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+B.goals = r => {
+  const s = SEUILS[1], need = s.m*r.C, rest = need - r.acq;
+  return `<span class="hand">Comment lire ce tableau</span>
+  <p><b>Points nécessaires</b> : seuil × nombre de coefficients. Pour le bac : 10 × ${r.C} = ${nf(need,0)} points.</p>
+  <p><b>Reste à obtenir</b> : points nécessaires − points déjà acquis en 1re. Pour le bac : ${nf(need,0)} − ${pt(r.acq)} = <b>${pt(Math.max(0,rest))} points</b>, à aller chercher parmi les ${nf(r.remainC*20,0)} points encore en jeu.</p>
+  <p><b>Moyenne nécessaire</b> : reste ÷ coefficients restants. Pour le bac : ${pt(Math.max(0,rest))} ÷ ${r.remainC} = <b>${nf(Math.max(0,rest)/(r.remainC||1))}/20</b> de moyenne sur toutes les notes de terminale (et les notes de 1re non saisies).</p>
+  <p><b>Ta simulation</b> : la marge (+) ou le manque (−) en points avec les notes que tu as imaginées.</p>
+  <p class="mut">Les points du jury ne sont pas comptés : depuis 2026, le jury peut ajouter au maximum 50 points (+0,5 de moyenne), et aucun point si la note est sous 8/20. Ce n'est jamais automatique.</p>`;
+};
+
+function renderBlocks(r){
+  const b = r.bloc;
+  const card = (t, x, pct) => `<div class="b"><div>${t}${pct?` <span class="mut">(${pct})</span>`:""}</div>
+    <b>${pt(x.p)}</b> <span class="mut">/ ${x.c*20} pts</span>
+    <div class="mut" style="font-size:.85rem">${x.f? "moyenne " + nf(x.p/x.f) + "/20 sur " + x.f + " coef saisis" : "aucune note"}</div>
+    <div class="bar"><span style="width:${(100*x.p/(x.c*20||1)).toFixed(1)}%"></span></div></div>`;
+  $("#blocksCard").innerHTML = `<h3>Contrôle continu ou épreuves ? <button class="info" type="button" data-b="blocks" aria-label="Explication des deux blocs">?</button></h3>
+    <div class="bubble" id="bb-blocks" hidden></div>
+    <div class="blocks">${card("Contrôle continu", b.cc, "40 coef")}${card("Épreuves finales", b.et, "60 coef")}${b.opt.c?card("Options", b.opt, "+"+b.opt.c+" coef"):""}</div>`;
+}
+B.blocks = r => `<span class="hand">40 % / 60 %</span>
+  <p><b>Contrôle continu (40 coef, 800 pts)</b> : histoire-géo 6, LVA 6, LVB 6, enseignement scientifique 6, EPS 6, EMC 2, spécialité arrêtée 8.</p>
+  <p><b>Épreuves finales (60 coef, 1 200 pts)</b> : français écrit 5 + oral 5, maths anticipées 2, philosophie 8, spécialités 16 + 16, Grand oral 8.</p>
+  <p>Le contrôle continu se joue toute l'année, sans rattrapage possible. Les épreuves se jouent sur une journée, mais certaines peuvent être repassées à l'oral de rattrapage.</p>`;
+
+function renderRattrapage(r){
+  const el = $("#rattrapCard");
+  if(!r.complete){ el.innerHTML = `<h3>Oral de rattrapage</h3><p class="mut">Complète toutes les notes (ou utilise l'hypothèse) pour savoir si tu serais concerné.</p>`; return; }
+  const m = r.avg;
+  let head;
+  if(m >= 10-EPS) head = `<p>Avec ${nf(m)}/20, tu n'es pas concerné. <span class="mut">Bon à savoir : si ta moyenne tombait entre 8 et 10, voici comment se jouerait le rattrapage.</span></p>`;
+  else if(m >= 8-EPS) head = `<p><b>Avec ${nf(m)}/20, tu irais au rattrapage.</b> Il te manque <b>${pt(10*r.C - r.total)} points</b> pour atteindre ${nf(10*r.C,0)}.</p>`;
+  else head = `<p class="ko">Avec ${nf(m)}/20 (moins de 8), pas de rattrapage possible : il te manque ${pt(8*r.C - r.total)} points pour y accéder.</p>`;
+  const e = r.eff;
+  const cands = [];
+  if(e.FRE!=null && e.FRO!=null) cands.push({k:"FR", n:"Français", c:10, v:(e.FRE+e.FRO)/2});
+  if(e.MATA!=null) cands.push({k:"MATA", n:"Maths anticipées", c:2, v:e.MATA, maths:true});
+  if(e.PHILO!=null) cands.push({k:"PHILO", n:"Philosophie", c:8, v:e.PHILO});
+  if(e.SPE1!=null) cands.push({k:"SPE1", n:S.spe1||"Spécialité 1", c:16, v:e.SPE1, maths:isMaths(S.spe1)});
+  if(e.SPE2!=null) cands.push({k:"SPE2", n:S.spe2||"Spécialité 2", c:16, v:e.SPE2, maths:isMaths(S.spe2)});
+  const target = 10*r.C;
+  const pairs = [];
+  for(let a=0;a<cands.length;a++) for(let b=a+1;b<cands.length;b++){
+    const A=cands[a], Bc=cands[b];
+    if(A.maths && Bc.maths) continue; // interdit : maths anticipées + spé maths
+    const other = r.total - A.v*A.c - Bc.v*Bc.c;
+    const tot = x => other + A.c*Math.max(x,A.v) + Bc.c*Math.max(x,Bc.v);
+    let need = null;
+    if(tot(20) >= target - EPS){ let lo=0, hi=20; for(let k=0;k<40;k++){ const mid=(lo+hi)/2; if(tot(mid)>=target-EPS) hi=mid; else lo=mid; } need = Math.ceil(hi*100)/100; }
+    pairs.push({A, B:Bc, need, gainMax: A.c*(20-A.v) + Bc.c*(20-Bc.v)});
+  }
+  pairs.sort((x,y) => (x.need??99) - (y.need??99) || y.gainMax - x.gainMax);
+  const show = m < 10-EPS && m >= 8-EPS;
+  const list = pairs.slice(0,3).map(p => `<li><b>${esc(p.A.n)}</b> (coef ${p.A.c}, ${nf(p.A.v)}/20) + <b>${esc(p.B.n)}</b> (coef ${p.B.c}, ${nf(p.B.v)}/20)<br>
+     ${p.need===null?`<span class="ko">même 20/20 aux deux oraux ne suffirait pas</span>`: show?`il te faudrait au moins <b>${nf(p.need)}/20</b> à chacun des deux oraux`:`gain maximal possible : ${pt(p.gainMax)} points`}</li>`).join("");
+  el.innerHTML = `<h3>Oral de rattrapage <button class="info" type="button" data-b="rattrap" aria-label="Comment marche le rattrapage ?">?</button></h3>
+    <div class="bubble" id="bb-rattrap" hidden></div>
+    ${head}
+    ${cands.length>=2 ? `<p class="mut" style="margin-bottom:0">${show?"Les meilleurs choix d'épreuves pour toi :":"Les épreuves qui rapporteraient le plus :"}</p><ul class="pairs">${list}</ul>` : ""}`;
+}
+B.rattrap = r => `<span class="hand">Le second groupe d'épreuves</span>
+  <p>Si ta moyenne est <b>entre 8 et 10</b>, tu passes <b>deux oraux de contrôle</b> parmi les épreuves écrites : français, maths anticipées, philosophie, spécialité 1, spécialité 2. Tu ne peux pas choisir à la fois les maths anticipées et la spécialité maths.</p>
+  <p>Chaque oral garde le coefficient de l'épreuve. Si ta note d'oral est <b>meilleure</b>, elle remplace l'ancienne ; sinon on garde l'ancienne. Pour le français, l'oral remplace la moyenne de ton écrit et de ton oral anticipés (coef 10 au total).</p>
+  <div class="calc"><div>Intérêt d'une épreuve ≈ (note d'oral − ancienne note) × coef</div></div>
+  <p>Les spécialités (coef 16) sont souvent le meilleur levier : 1 point de plus à l'oral = 16 points au bac. Après le rattrapage, il faut 10/20 pour être admis, et aucune mention n'est attribuée.</p>
+  <p class="mut">Sous 8/20, aucun rattrapage, et le jury ne peut pas t'ajouter de points pour y accéder.</p>`;
+
+function renderDock(r){
+  let txt;
+  if(r.complete){
+    const ns = nextSeuil(r.avg);
+    txt = `<span class="p">${nf(r.total,1)} <small>/ ${nf(r.max,0)} pts</small></span>
+      <span class="m">${nf(r.avg)}/20 · ${mentionOf(r.avg)}</span>
+      <span class="n">${ns ? `Il manque ${pt(ns.m*r.C - r.total)} pts pour : ${ns.t.toLowerCase()}.` : "Toutes les mentions sont atteintes."}${r.hyp>0?` Dont ${pt(r.hyp)} pts d'hypothèse.`:""}</span>`;
+  } else {
+    const restBac = Math.max(0, 10*r.C - r.total);
+    txt = `<span class="p">${nf(r.total,1)} <small>pts comptés</small></span>
+      <span class="m">${nf(r.missC*20,0)} pts encore en jeu</span>
+      <span class="n">${restBac>0?`Il te manque ${pt(restBac)} pts pour le bac, soit ${nf(restBac/r.missC)}/20 de moyenne sur les ${r.missC} coef restants.`:"Le bac est déjà assuré avec tes notes saisies."}</span>`;
+  }
+  $("#dock").innerHTML = txt + `<a href="#bilan">Voir le bilan</a>`;
+}
+
+/* ---------------- Événements ---------------- */
+function fullRender(){ renderProfile(); renderNotes(); update(); }
+
+document.addEventListener("input", e => {
+  const t = e.target;
+  if(t.matches("input[data-k]")){ S.notes[t.dataset.k] = t.value; save(); update(); }
+  else if(t.id === "hypoVal"){ S.hypo = parseFloat(t.value); $("#hypoTxt").textContent = nf(S.hypo); save(); update(); }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if(["spe1","spe2","speAb","lva","lvb"].includes(t.id)){ S[t.id] = t.value; save(); fullRender(); }
+  else if(t.closest("#optlist")){
+    S.options = [...document.querySelectorAll("#optlist input:checked")].map(x => x.value);
+    save(); fullRender();
+  }
+  else if(t.id === "hypoOn"){ S.hypoOn = t.checked; $("#hypoBox").hidden = !t.checked; save(); update(); }
+});
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".info");
+  if(btn){
+    const key = btn.dataset.b, el = document.getElementById("bb-"+key);
+    if(!el) return;
+    const open = btn.getAttribute("aria-expanded") === "true";
+    btn.setAttribute("aria-expanded", String(!open));
+    btn.setAttribute("aria-controls", "bb-"+key);
+    if(!open){ OPEN.add(key); fillBubble(key, R); } else OPEN.delete(key);
+    el.hidden = open;
+    return;
+  }
+  if(e.target.id === "copy1"){
+    const map = {HG1:"HG2", LVA1:"LVA2", LVB1:"LVB2", ES1:"ES2", EMC1:"EMC2"};
+    S.options.forEach(id => map["O_"+id+"_1"] = "O_"+id+"_2");
+    let n = 0;
+    for(const [a0,b0] of Object.entries(map)) for(const sm of ["_S1","_S2"]){
+      const a = a0+sm, b = b0+sm, v = parseNote(S.notes[a]);
+      if(v !== null && !Number.isNaN(v) && parseNote(S.notes[b]) === null){ S.notes[b] = String(S.notes[a]).trim(); n++; }
+    }
+    save(); renderNotes(); update();
+    e.target.textContent = n ? `${n} note${n>1?"s":""} de semestre recopiée${n>1?"s":""}` : "Rien à recopier (cases déjà remplies ou 1re vide)";
+    setTimeout(() => { e.target.textContent = "Reprendre mes moyennes de 1re en terminale"; }, 2500);
+  }
+  if(e.target.id === "reset"){
+    if(!confirm("Effacer toutes tes notes et ton profil ? Cette action est définitive.")) return;
+    S = JSON.parse(JSON.stringify(DEFAULT));
+    document.cookie = COOKIE + "=; max-age=0; path=/";
+    try{ localStorage.removeItem(COOKIE); }catch(err){}
+    $("#hypoOn").checked = false; $("#hypoBox").hidden = true;
+    fullRender();
+  }
+});
+
+// Init
+$("#hypoOn").checked = S.hypoOn; $("#hypoBox").hidden = !S.hypoOn;
+$("#hypoVal").value = S.hypo; $("#hypoTxt").textContent = nf(S.hypo);
+fullRender();
+</script>
+</body>
+</html>
