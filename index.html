@@ -5,10 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulateur bac 2027</title>
 <meta name="description" content="Simulateur de note au bac général, session 2027 : calcule tes points, ta moyenne, ta mention et ce qu'il te reste à obtenir, avec les coefficients officiels.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
+/* Polices hébergées dans fonts/ (licence SIL OFL 1.1, fichiers Fontsource) :
+   la page ne fait aucune requête vers un autre site. */
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;
+  src:url("fonts/atkinson-hyperlegible-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;
+  src:url("fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;
+  src:url("fonts/atkinson-hyperlegible-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;
+  src:url("fonts/atkinson-hyperlegible-latin-400-italic.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;
+  src:url("fonts/atkinson-hyperlegible-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;
+  src:url("fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Caveat";font-style:normal;font-weight:700;font-display:swap;
+  src:url("fonts/caveat-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Caveat";font-style:normal;font-weight:700;font-display:swap;
+  src:url("fonts/caveat-latin-700-normal.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
   --paper:#FAFBFD;
   --sheet:#FFFFFF;
@@ -414,7 +437,7 @@ function buildItems(){
   // 1re : épreuves anticipées
   add({key:"FRE", g:"ea", bloc:"et", sec:"p", coef:5, label:"Français écrit", rat:"FR", about:"Épreuve anticipée écrite de français (4 h), passée en juin de 1re. Coef 5."});
   add({key:"FRO", g:"ea", bloc:"et", sec:"p", coef:5, label:"Français oral", rat:"FR", about:"Épreuve anticipée orale de français (20 min). Coef 5."});
-  add({key:"MATA",g:"ea", bloc:"et", sec:"p", coef:2, label:"Maths (épreuve anticipée)", rat:"MATA", about:"Nouveauté du bac 2027 : épreuve écrite anticipée de maths (2 h) passée par tous les élèves de 1re en juin 2026. Coef 2. Ces 2 coefficients ont été pris au Grand oral, qui passe de 10 à 8."});
+  add({key:"MATA",g:"ea", bloc:"et", sec:"p", coef:2, label:"Maths (épreuve anticipée)", rat:"MATA", about:"Nouveauté du bac 2027 : épreuve écrite anticipée de maths (2 h) passée par toutes et tous les élèves de 1re en juin 2026. Coef 2. Ces 2 coefficients ont été pris au Grand oral, qui passe de 10 à 8."});
   // Options (1re)
   S.options.forEach(id => { const o = OPTS.find(x=>x.id===id); if(o && o.d===2) add({key:"O_"+id+"_1", g:"opt1", bloc:"opt", sec:"p", coef:2, opt:id, label:o.n+" (1re)", about:"Option suivie en 1re et en terminale : 2 coef pour la moyenne annuelle de 1re, 2 pour celle de terminale."}); });
   // Terminale : contrôle continu
@@ -427,7 +450,7 @@ function buildItems(){
   // Terminale : épreuves
   add({key:"SPE1",g:"et", bloc:"et", sec:"t", coef:16, label:spe1, rat:"SPE1", about:"Épreuve écrite de spécialité, coef 16 : le plus gros coefficient du bac. 1 point de plus sur 20 ici = 16 points au bac = +0,16 de moyenne."});
   add({key:"SPE2",g:"et", bloc:"et", sec:"t", coef:16, label:spe2, rat:"SPE2", about:"Deuxième épreuve écrite de spécialité, coef 16."});
-  add({key:"PHILO",g:"et",bloc:"et", sec:"t", coef:8, label:"Philosophie", rat:"PHILO", about:"Épreuve écrite de 4 h, coef 8, passée par tous les élèves de terminale générale."});
+  add({key:"PHILO",g:"et",bloc:"et", sec:"t", coef:8, label:"Philosophie", rat:"PHILO", about:"Épreuve écrite de 4 h, coef 8, passée par toutes et tous les élèves de terminale générale."});
   add({key:"GO",  g:"et", bloc:"et", sec:"t", coef:8, label:"Grand oral", about:"Oral de 20 min sur tes spécialités et ton projet. Coef 8 à partir de la session 2027 (il était à 10 avant l'arrivée des maths anticipées)."});
   // Options (terminale)
   S.options.forEach(id => { const o = OPTS.find(x=>x.id===id); if(o) add({key:"O_"+id+"_2", g:"opt2", bloc:"opt", sec:"t", coef:2, opt:id, label:o.n+(o.d===2?" (terminale)":""), about: o.d===2 ? "Moyenne annuelle de terminale de ton option, coef 2." : "Option suivie seulement en terminale : elle compte coef 2, qui s'ajoutent aux 100 coefficients du bac."}); });
@@ -477,9 +500,9 @@ function mentionOf(m){
   if(m >= 16-EPS) return "Très bien";
   if(m >= 14-EPS) return "Bien";
   if(m >= 12-EPS) return "Assez bien";
-  if(m >= 10-EPS) return "Admis sans mention";
+  if(m >= 10-EPS) return "Admis·e sans mention";
   if(m >= 8-EPS)  return "Rattrapage (oral de contrôle)";
-  return "Non admis";
+  return "Non admis·e";
 }
 function nextSeuil(m){ return SEUILS.find(s => s.m > m + EPS) || null; }
 
@@ -794,10 +817,10 @@ B.blocks = r => `<span class="hand">40 % / 60 %</span>
 
 function renderRattrapage(r){
   const el = $("#rattrapCard");
-  if(!r.complete){ el.innerHTML = `<h3>Oral de rattrapage</h3><p class="mut">Complète toutes les notes (ou utilise l'hypothèse) pour savoir si tu serais concerné.</p>`; return; }
+  if(!r.complete){ el.innerHTML = `<h3>Oral de rattrapage</h3><p class="mut">Complète toutes les notes (ou utilise l'hypothèse) pour savoir si tu serais concerné·e.</p>`; return; }
   const m = r.avg;
   let head;
-  if(m >= 10-EPS) head = `<p>Avec ${nf(m)}/20, tu n'es pas concerné. <span class="mut">Bon à savoir : si ta moyenne tombait entre 8 et 10, voici comment se jouerait le rattrapage.</span></p>`;
+  if(m >= 10-EPS) head = `<p>Avec ${nf(m)}/20, tu n'es pas concerné·e. <span class="mut">Bon à savoir : si ta moyenne tombait entre 8 et 10, voici comment se jouerait le rattrapage.</span></p>`;
   else if(m >= 8-EPS) head = `<p><b>Avec ${nf(m)}/20, tu irais au rattrapage.</b> Il te manque <b>${pt(10*r.C - r.total)} points</b> pour atteindre ${nf(10*r.C,0)}.</p>`;
   else head = `<p class="ko">Avec ${nf(m)}/20 (moins de 8), pas de rattrapage possible : il te manque ${pt(8*r.C - r.total)} points pour y accéder.</p>`;
   const e = r.eff;
@@ -831,7 +854,7 @@ B.rattrap = r => `<span class="hand">Le second groupe d'épreuves</span>
   <p>Si ta moyenne est <b>entre 8 et 10</b>, tu passes <b>deux oraux de contrôle</b> parmi les épreuves écrites : français, maths anticipées, philosophie, spécialité 1, spécialité 2. Tu ne peux pas choisir à la fois les maths anticipées et la spécialité maths.</p>
   <p>Chaque oral garde le coefficient de l'épreuve. Si ta note d'oral est <b>meilleure</b>, elle remplace l'ancienne ; sinon on garde l'ancienne. Pour le français, l'oral remplace la moyenne de ton écrit et de ton oral anticipés (coef 10 au total).</p>
   <div class="calc"><div>Intérêt d'une épreuve ≈ (note d'oral − ancienne note) × coef</div></div>
-  <p>Les spécialités (coef 16) sont souvent le meilleur levier : 1 point de plus à l'oral = 16 points au bac. Après le rattrapage, il faut 10/20 pour être admis, et aucune mention n'est attribuée.</p>
+  <p>Les spécialités (coef 16) sont souvent le meilleur levier : 1 point de plus à l'oral = 16 points au bac. Après le rattrapage, il faut 10/20 pour être admis·e, et aucune mention n'est attribuée.</p>
   <p class="mut">Sous 8/20, aucun rattrapage, et le jury ne peut pas t'ajouter de points pour y accéder.</p>`;
 
 function renderDock(r){

@@ -40,7 +40,7 @@ Le simulateur d'oral de rattrapage choisit les paires d'épreuves qui rapportera
 - **Un objectif chiffré** : la moyenne nécessaire sur ce qui reste, pour le bac et pour chaque mention.
 - **Chaque calcul expliqué** : les bulles « ? » détaillent le calcul avec les notes de l'élève.
 - **Une simulation honnête** : la page rappelle que le contrôle continu peut être harmonisé, et que seul le jury délivre le diplôme et les mentions.
-- **Rien à créer, rien d'envoyé** : ni compte ni serveur ; les notes restent sur l'appareil.
+- **Rien à créer, rien d'envoyé** : ni compte ni serveur ; les notes restent sur l'appareil, et la page ne contacte aucun autre site (même ses polices sont dans le dépôt).
 
 ## Chaque rentrée : les coefficients
 
@@ -70,10 +70,10 @@ Vérifie ces pages à chaque rentrée. Si un coefficient change, il suffit de mo
 
 ### Mettre ta copie en ligne
 
-Tout le simulateur tient dans un seul fichier, `index.html`, sans dépendance.
+Le simulateur tient dans `index.html`, plus ses polices dans le dossier `fonts/` : aucune dépendance extérieure.
 
 1. Crée un dépôt GitHub public, par exemple `simulateur-bac`.
-2. Dépose `index.html` à la racine : **Add file → Upload files**, puis **Commit changes**.
+2. Dépose `index.html` et le dossier `fonts/` à la racine : **Add file → Upload files** (le dossier se glisse tel quel dans la page), puis **Commit changes**.
 3. Dans **Settings → Pages**, choisis **Deploy from a branch**, la branche `main` et le dossier `/ (root)`, puis **Save**.
 4. Une à deux minutes plus tard, le site est en ligne : `https://<ton-pseudo>.github.io/simulateur-bac/`.
 
@@ -88,6 +88,6 @@ Une question, une idée, un bug ? Les [issues GitHub](https://github.com/babash/
 
 - **Le code** (le fichier `index.html`, sauf ses textes d'explication) est sous licence [MIT](LICENSE).
 - **Les documents** (les textes d'explication de la page, dont les bulles « ? », et ce README) sont sous licence [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr).
-- **Les polices** Atkinson Hyperlegible et Caveat : licence SIL OFL, par Google Fonts.
+- **Les polices** Atkinson Hyperlegible (Braille Institute of America) et Caveat (The Caveat Project Authors) : licence SIL OFL 1.1, hébergées dans `fonts/` avec leur licence ([Atkinson Hyperlegible](fonts/LICENCE-atkinson-hyperlegible.txt), [Caveat](fonts/LICENCE-caveat.txt)) ; fichiers repris de [Fontsource](https://fontsource.org).
 
 Tu peux les réutiliser et les modifier, y compris pour tes classes, en mentionnant Babash - NSI Tani Malandi et la licence ; un document modifié se partage sous la même licence. Si tu utilises l'IA pour les modifier, merci de le préciser.
