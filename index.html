@@ -235,6 +235,7 @@ table.goals tr.reached td:first-child b{color:var(--green)}
 
 footer{color:var(--muted);font-size:.9rem;margin-top:34px;border-top:1px solid var(--line);padding-top:16px}
 footer ul{padding-left:1.1rem}
+footer .credits a{white-space:nowrap}
 details.howto{margin-top:6px}
 details.howto summary{cursor:pointer;color:var(--ink);font-weight:700;padding:6px 0}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
@@ -323,6 +324,7 @@ details.howto summary{cursor:pointer;color:var(--ink);font-weight:700;padding:6p
       <li><a href="https://www.education.gouv.fr/reussir-au-lycee/tout-savoir-sur-le-baccalaureat-les-reponses-vos-questions-325499" target="_blank" rel="noopener">education.gouv.fr : Tout savoir sur le baccalauréat</a> (rattrapage)</li>
       <li><a href="https://www.education.gouv.fr/bo/2026/Hebdo13/MENE2607843N" target="_blank" rel="noopener">BO n°13 du 27 mars 2026 : points du jury limités à 50</a></li>
     </ul>
+    <p class="credits">Conçu par Babash - NSI Tani Malandi · <a href="https://github.com/babash/simulateur-bac#licence" target="_blank" rel="noopener">code MIT, documents CC BY-SA 4.0</a> · <a href="https://github.com/babash/simulateur-bac" target="_blank" rel="noopener">Code source sur GitHub</a></p>
   </footer>
 </main>
 
@@ -928,6 +930,16 @@ document.addEventListener("click", e => {
 $("#hypoOn").checked = S.hypoOn; $("#hypoBox").hidden = !S.hypoOn;
 $("#hypoVal").value = S.hypo; $("#hypoTxt").textContent = nf(S.hypo);
 fullRender();
+
+// La barre du bas est fixe et plus haute sur téléphone : la page garde en dessous
+// une marge à sa hauteur, pour que la fin du pied de page reste visible.
+(() => {
+  const dock = document.querySelector(".dock");
+  if (!dock || !("ResizeObserver" in window)) return;
+  new ResizeObserver(() => {
+    document.body.style.paddingBottom = Math.max(110, dock.offsetHeight + 16) + "px";
+  }).observe(dock);
+})();
 </script>
 </body>
 </html>
